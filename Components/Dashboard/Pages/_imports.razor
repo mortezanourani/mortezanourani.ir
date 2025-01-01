@@ -1,1 +1,9 @@
-﻿@using mortezanourani.ir.Components.Dashboard.Shared
+﻿@using Microsoft.AspNetCore.Authorization
+@using mortezanourani.ir.Components.Dashboard.Shared
+@using Microsoft.EntityFrameworkCore
+@using mortezanourani.ir.Data
+@using mortezanourani.ir.Models
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.QuickGrid
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<AppDbContext> DbFactory

@@ -1,0 +1,83 @@
+﻿@page "/Dashboard/Albums/Edit"
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Album</h2>
+<hr />
+@if (Album is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Album" OnValidSubmit="UpdateAlbum" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Album.Id" value="@Album.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="@Album.Name" class="form-control" />
+                    <ValidationMessage For="() => Album.Name" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/Dashboard/Albums">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private Guid Id { get; set; }
+
+    private Album? Album { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Album ??= await context.Albums.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Album is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateAlbum()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Album!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!AlbumExists(Album!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo("/Dashboard/Albums");
+    }
+
+    private bool AlbumExists(Guid id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Albums.Any(e => e.Id == id);
+    }
+}

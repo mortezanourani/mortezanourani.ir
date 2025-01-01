@@ -1,0 +1,52 @@
+﻿@page "/Dashboard/Albums/Delete"
+@rendermode InteractiveServer
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Album</h2>
+    <hr />
+    @if (album is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Name</dt>
+            <dd class="col-sm-10">@album.Name</dd>
+        </dl>
+        <EditForm method="post" Model="album" OnValidSubmit="DeleteAlbum" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(album is null)">Delete</button> |
+            <a href="/Dashboard/Albums">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Album? album;
+
+    [SupplyParameterFromQuery]
+    private Guid Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        album = await context.Albums.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (album is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task DeleteAlbum()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Albums.Remove(album!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/Dashboard/Albums");
+    }
+}

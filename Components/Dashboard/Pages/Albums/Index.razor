@@ -1,0 +1,33 @@
+﻿@page "/Dashboard/Albums"
+@rendermode InteractiveServer
+
+@implements IAsyncDisposable
+
+<PageTitle>Index</PageTitle>
+
+<h1>Index</h1>
+
+<p>
+    <a href="/Dashboard/Albums/Create">Create New</a>
+</p>
+
+<QuickGrid Class="table" Items="context.Albums">
+    <PropertyColumn Property="album => album.Name" />
+
+    <TemplateColumn Context="album">
+        <a href="@($"/Dashboard/Albums/Edit?id={album.Id}")">Edit</a> |
+        <a href="@($"/Dashboard/Albums/Details?id={album.Id}")">Details</a> |
+        <a href="@($"/Dashboard/Albums/Delete?id={album.Id}")">Delete</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private AppDbContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
