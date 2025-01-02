@@ -1,0 +1,101 @@
+﻿@page "/Dashboard/Images/Edit"
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>Image</h2>
+<hr />
+@if (Image is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Image" OnValidSubmit="UpdateImage" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert"/>
+                <input type="hidden" name="Image.Id" value="@Image.Id" />
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name:</label>
+                    <InputText id="name" @bind-Value="Image.Name" class="form-control" />
+                    <ValidationMessage For="() => Image.Name" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputText id="description" @bind-Value="Image.Description" class="form-control" />
+                    <ValidationMessage For="() => Image.Description" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="filename" class="form-label">FileName:</label>
+                    <InputText id="filename" @bind-Value="Image.FileName" class="form-control" />
+                    <ValidationMessage For="() => Image.FileName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="fileextension" class="form-label">FileExtension:</label>
+                    <InputText id="fileextension" @bind-Value="Image.FileExtension" class="form-control" />
+                    <ValidationMessage For="() => Image.FileExtension" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/Dashboard/Albums/Details?id=@Image?.Album.Id">Back to List</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private Guid Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Image? Image { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        Image ??= await context.Images
+            .Include(m => m.Album)
+            .FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Image is null)
+        {
+            NavigationManager.NavigateTo("notfound");
+        }
+    }
+
+    private async Task UpdateImage()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Image!).State = EntityState.Modified;
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!ImageExists(Image!.Id))
+            {
+                NavigationManager.NavigateTo("notfound");
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        NavigationManager.NavigateTo($"/Dashboard/Albums/Details?id={Image!.Album.Id}");
+    }
+
+    private bool ImageExists(Guid id)
+    {
+        using var context = DbFactory.CreateDbContext();
+        return context.Images.Any(e => e.Id == id);
+    }
+}
